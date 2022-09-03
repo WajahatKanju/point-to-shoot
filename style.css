@@ -6,12 +6,13 @@
 
 body{
   min-height: 100vh;
-  background: linear-gradient(180deg, red, blue, green) no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: darkkhaki;
 }
 #canvas {
+  background: linear-gradient(180deg, red, green, blue) no-repeat;
   border: 3px solid black;
   width: 500px;
   height: 800px;
