@@ -8,6 +8,11 @@ const CANVAS_HEIGHT = (canvas.height = 800);
 
 const totalRavens = 20;
 let ravens = [];
+
+let previousTimestamp = 0; 
+let totalInterval = 0;
+
+
 class Raven {
   constructor() {
     this.raven = new Image();
@@ -23,7 +28,6 @@ class Raven {
     this.y = Math.random() * (canvas.height - this.height * 1.5);
     this.dx = Math.random() * (5 - 2.5) + 2.5;
     this.markedForDeletion = false;
-
     this.frame = 0;
   }
 
@@ -40,7 +44,6 @@ class Raven {
     if (this.x < 0 - this.width) {
       this.markedForDeletion = true;
     }
-    console.log(`Frame = ${this.frame}`)
   }
 }
 
@@ -48,14 +51,19 @@ for (let i = 0; i < totalRavens; i++) {
   ravens.push(new Raven());
 }
 
-const animate = () => {
+const animate = (timestamp) => {
   requestAnimationFrame(animate);
+  
+  let deltaTime = timestamp - previousTimestamp;
+  previousTimestamp = timestamp;
+  totalInterval += deltaTime;
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ravens.forEach((raven, i) => {
-    raven.update();
+    raven.update(totalInterval);
     if (raven.x < 0 - raven.width) {
-      ravens = ravens.filter(raven => !raven.markedForDeletion)
+      ravens = ravens.filter(raven => !raven.markedForDeletion);
+      ravens.push(new Raven());
     }
   });
 };
-animate();
+animate(0);
