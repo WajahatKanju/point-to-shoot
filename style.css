@@ -1,0 +1,19 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body{
+  min-height: 100vh;
+  background: linear-gradient(180deg, red, blue, green) no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#canvas {
+  border: 3px solid black;
+  width: 500px;
+  height: 800px;
+  
+}
