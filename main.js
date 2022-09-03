@@ -5,27 +5,42 @@ const ctx = canvas.getContext("2d");
 const CANVAS_WIDTH = (canvas.width = 500);
 const CANVAS_HEIGHT = (canvas.height = 800);
 
+
 const totalRavens = 20;
 let ravens = [];
 class Raven {
   constructor() {
-    this.width = Math.random() * 75 + 25;
-    this.height = this.width / 2;
+    this.raven = new Image();
+    this.raven.src = './resources/raven.png';
+    this.rows = 6;
+    this.cols = 1;
+    this.spriteWidth = this.raven.width/this.rows;
+    this.spriteHeight = this.raven.height/this.cols;
+    this.sizeModifier = Math.random() * (0.75 - 0.25) + 0.25;
+    this.width = this.spriteWidth * this.sizeModifier;
+    this.height = this.spriteHeight * this.sizeModifier;
     this.x = canvas.width;
-    this.y = Math.random() * canvas.height - this.height;
+    this.y = Math.random() * (canvas.height - this.height * 1.5);
     this.dx = Math.random() * (5 - 2.5) + 2.5;
-    this.notIndisplay = false;
+    this.markedForDeletion = false;
+
+    this.frame = 0;
   }
 
   draw() {
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.drawImage(this.raven, this.spriteWidth * this.frame, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);
   }
   update() {
+    this.draw();
+    if(this.frame+1 > this.rows-1){
+      this.frame=0
+    }
+    else this.frame++;
     this.x -= this.dx;
     if (this.x < 0 - this.width) {
-      this.notIndisplay = true;
+      this.markedForDeletion = true;
     }
-    this.draw();
+    console.log(`Frame = ${this.frame}`)
   }
 }
 
@@ -39,9 +54,8 @@ const animate = () => {
   ravens.forEach((raven, i) => {
     raven.update();
     if (raven.x < 0 - raven.width) {
-      ravens = ravens.filter(raven => !raven.notIndisplay)
+      ravens = ravens.filter(raven => !raven.markedForDeletion)
     }
   });
-  console.log(ravens);
 };
 animate();
