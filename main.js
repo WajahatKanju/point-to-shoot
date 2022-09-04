@@ -23,6 +23,10 @@ let trails = [];
 let globalSpeed = 0.005;
 let gameSpeed = 15;
 
+let backgroundMusic = new Audio();
+backgroundMusic.src = './resources/background.mp3';
+backgroundMusic.play();
+
 class Trail {
   constructor(x, y, size, color) {
     this.x = x;
@@ -247,13 +251,13 @@ class Layer {
     this.draw();
   }
 }
-const layer_1 = new Layer("./resources/layers/1.png", 0.2);
-const layer_2 = new Layer("./resources/layers/2.png", 0.4);
-const layer_3 = new Layer("./resources/layers/3.png", 0.6);
-const layer_4 = new Layer("./resources/layers/4.png", 0.8);
-const layer_5 = new Layer("./resources/layers/5.png", 1);
 
-layers.push(layer_1, layer_2, layer_3, layer_4, layer_5);
+// const layer_1 = new Layer("./resources/layers/1.png", 0.2);
+// const layer_2 = new Layer("./resources/layers/2.png", 0.4);
+// const layer_3 = new Layer("./resources/layers/3.png", 0.6);
+// const layer_4 = new Layer("./resources/layers/4.png", 0.8);
+
+// layers.push(layer_1, layer_2, layer_3, layer_4);
 
 
 const animate = (timestamp) => {
