@@ -83,7 +83,7 @@ class Raven {
 
 
 class Explosion {
-  constructor(x, y) {
+  constructor(x, y, sizeModifier) {
     this.spriteSheet = image;
     // this.spriteSheet = new Image();
     // this.spriteSheet.src = "./resources/boom.png";
@@ -93,8 +93,8 @@ class Explosion {
     this.cols = 1;
     this.spriteWidth = this.spriteSheet.width / this.rows;
     this.spriteHeight = this.spriteSheet.height / this.cols;
-    this.width = this.spriteWidth * 0.5;
-    this.height = this.spriteHeight * 0.5;
+    this.width = this.spriteWidth * sizeModifier;
+    this.height = this.spriteHeight * sizeModifier;
     this.frame = 0;
     this.speed = 13;
     this.turn = 0;
@@ -121,10 +121,9 @@ class Explosion {
     ctx.restore();
   }
 
-  update(deltaTime) {
+  update() {
     this.turn++;
     if (this.frame === 0) this.explosion.play();
-    if(this.e)
     if (this.turn % this.speed === 0) {
       this.frame++;
     }
@@ -161,7 +160,7 @@ window.addEventListener("click", (e) => {
       // let before = ravens.length;
       score++;
       raven.markedForDeletion = true;
-      explosions.push(new Explosion(raven.x, raven.y))
+      explosions.push(new Explosion(raven.x + raven.width/2, raven.y + raven.height/2, raven.sizeModifier))
     }
   });
 });
@@ -184,5 +183,6 @@ const animate = (timestamp) => {
     ravens.push(new Raven());
     timeToNextRaven = 0;
   }
+  console.log(explosions)
 };
 animate(0);
