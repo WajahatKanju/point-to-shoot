@@ -13,12 +13,14 @@ const position = canvas.getBoundingClientRect();
 const explosion = new Image();
 explosion.src = "./resources/boom.png";
 
+let gameLost = false;
 let score = 0;
 let ravens = [];
 let explosions = [];
 let previousTimestamp = 0;
 let timeToNextRaven = 0;
 let trails = [];
+let globalSpeed = 0.005;
 
 class Trail {
   constructor(x, y, size, color) {
@@ -27,7 +29,6 @@ class Trail {
     this.size = size;
     this.radius = Math.random() + this.size / 10;
     this.maxRadius = Math.random() * 20 + 30;
-    this.trailInterval = 200;
     this.markedForDeletion = false;
     this.color = color;
     this.opacity = 1;
@@ -53,8 +54,8 @@ class Trail {
 class Raven {
   constructor() {
     this.raven = new Image();
-    this.raven.src = "./resources/raven.png";
-    this.rows = 6;
+    this.raven.src = "./resources/spritesheet.png";
+    this.rows = 4;
     this.cols = 1;
     this.spriteWidth = this.raven.width / this.rows;
     this.spriteHeight = this.raven.height / this.cols;
@@ -63,7 +64,7 @@ class Raven {
     this.height = this.spriteHeight * this.sizeModifier;
     this.x = canvas.width;
     this.y = Math.random() * (canvas.height - this.height * 1.5);
-    this.dx = Math.random() * (5 - 2.5) + 2.5;
+    this.dx = Math.random() * (5 - 2.5) + 2.5 + globalSpeed;
     this.dy = Math.random() * 5 - 2.5;
     this.markedForDeletion = false;
     this.timeSinceFlap = 0;
@@ -73,6 +74,7 @@ class Raven {
     this.green = Math.floor(Math.random() * 255);
     this.blue = Math.floor(Math.random() * 255);
     this.color = "rgb(" + this.red + "," + this.green + "," + this.blue + ")";
+    this.hasTrail = Math.random() < 0.3;
   }
 
   draw() {
@@ -96,14 +98,30 @@ class Raven {
   update(deltaTime) {
     this.timeSinceFlap += deltaTime;
     if (this.timeSinceFlap > this.flapInterval) {
-      trails.push(
-        new Trail(
-          this.x + this.width / 2,
-          this.y + this.height / 2,
-          this.width,
-          this.color
-        )
-      );
+
+      if (this.hasTrail) {
+
+        trails.push(
+          new Trail(
+            this.x + this.width / 2,
+            this.y + this.height / 2,
+            this.width,
+            this.color
+          ),
+          new Trail(
+            this.x + this.width / 2 + 5,
+            this.y + this.height / 2 + 5,
+            this.width,
+            this.color
+          ),
+          new Trail(
+            this.x + this.width / 2 - 5,
+            this.y + this.height / 2 - 5,
+            this.width,
+            this.color
+          )
+        );
+      }
       this.timeSinceFlap = 0;
       if (this.frame + 1 > this.rows - 1) {
         this.frame = 0;
@@ -115,6 +133,7 @@ class Raven {
     this.y += this.dy;
     this.x -= this.dx;
     if (this.x < 0 - this.width) {
+      gameLost = true;
       this.markedForDeletion = true;
     }
   }
@@ -172,10 +191,6 @@ class Explosion {
   }
 }
 
-// for (let i = 0; i < totalRavens; i++) {
-//   ravens.push(new Raven());
-// }
-
 const drawScore = () => {
   ctx.font = "30px Impact";
   ctx.fillStyle = "black";
@@ -213,7 +228,6 @@ for (let i = 0; i < 2; i++) {
 }
 
 const animate = (timestamp) => {
-  requestAnimationFrame(animate);
 
   let deltaTime = timestamp - previousTimestamp;
   previousTimestamp = timestamp;
@@ -221,18 +235,32 @@ const animate = (timestamp) => {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   collisionCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawScore();
-  ravens = ravens.filter((object) => !object.markedForDeletion);
-  trails = trails.filter((object) => !object.markedForDeletion);
-  [...trails, ...ravens, ...explosions].forEach((object) =>
+
+  [...explosions, ...trails, ...ravens].forEach((object) =>
     object.update(deltaTime)
   );
-  [...trails, ...ravens, ...explosions].forEach((object) => object.draw());
+  ravens = ravens.filter((object) => !object.markedForDeletion);
+  trails = trails.filter((object) => !object.markedForDeletion);
+  [...explosions, ...trails, ...ravens].forEach((object) => object.draw());
   ravens.sort((r1, r2) => r2 - r1);
-  // if (timeToNextRaven > 10000000) {
-  //   ravens.push(new Raven());
-  //   timeToNextRaven = 0;
-  // }
 
+  if (timeToNextRaven > 1000) {
+    ravens.push(new Raven());
+    timeToNextRaven = 0;
+  }
+  globalSpeed += 0.005;
   // console.log(trails);
+  if(!gameLost)   requestAnimationFrame(animate);
+  else {
+    ctx.font = "40px Impact";
+    ctx.fillStyle = "black";
+    ctx.fillText(`Game Over! Your Score was ${score}, Reload Window to Restart The Game `, ctx.canvas.width/2 - 550 -5 , ctx.canvas.height/2 -5);
+    ctx.fillStyle = "black";
+    ctx.fillText(`Game Over! Your Score was ${score}, Reload Window to Restart The Game `, ctx.canvas.width/2 + 5 - 550, ctx.canvas.height/2 + 5);
+ 
+    ctx.fillStyle = "white";
+    ctx.fillText(`Game Over! Your Score was ${score}, Reload Window to Restart The Game `, ctx.canvas.width/2 - 550, ctx.canvas.height/2 );
+    
+  }
 };
 animate(0);
