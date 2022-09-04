@@ -21,6 +21,7 @@ let previousTimestamp = 0;
 let timeToNextRaven = 0;
 let trails = [];
 let globalSpeed = 0.005;
+let gameSpeed = 15;
 
 class Trail {
   constructor(x, y, size, color) {
@@ -222,10 +223,38 @@ window.addEventListener("click", (e) => {
     }
   });
 });
-
-for (let i = 0; i < 2; i++) {
-  ravens.push(new Raven());
+let layers = [];
+class Layer {
+  constructor(imageUrl, speedModifier) {
+    this.imageUrl = imageUrl;
+    this.image = new Image();
+    this.image.src = this.imageUrl;
+    this.speedModifier = speedModifier;
+    this.speed = gameSpeed * this.speedModifier;
+    this.width = 2400;
+    this.x = 0;
+    this.y = 0;
+  }
+  draw() {
+    ctx.drawImage(this.image, this.x, 0);
+    ctx.drawImage(this.image, this.x + this.width, 0);
+  }
+  update() {
+    this.speed = gameSpeed * this.speedModifier;
+    if (this.x < -this.width) this.x = 0;
+    else this.x -= this.speed;
+    // this.x = gameFrame * this.speed % this.width
+    this.draw();
+  }
 }
+const layer_1 = new Layer("./resources/layers/1.png", 0.2);
+const layer_2 = new Layer("./resources/layers/2.png", 0.4);
+const layer_3 = new Layer("./resources/layers/3.png", 0.6);
+const layer_4 = new Layer("./resources/layers/4.png", 0.8);
+const layer_5 = new Layer("./resources/layers/5.png", 1);
+
+layers.push(layer_1, layer_2, layer_3, layer_4, layer_5);
+
 
 const animate = (timestamp) => {
 
@@ -241,7 +270,7 @@ const animate = (timestamp) => {
   );
   ravens = ravens.filter((object) => !object.markedForDeletion);
   trails = trails.filter((object) => !object.markedForDeletion);
-  [...explosions, ...trails, ...ravens].forEach((object) => object.draw());
+  [...layers, ...explosions, ...trails, ...ravens].forEach((object) => object.draw());
   ravens.sort((r1, r2) => r2 - r1);
 
   if (timeToNextRaven > 1000) {
