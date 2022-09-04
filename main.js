@@ -10,34 +10,17 @@ const CANVAS_HEIGHT = (canvas.height = innerHeight);
 const COLLISION_CANVAS_WIDTH = (collisionCanvas.width = innerWidth);
 const COLLISION_CANVAS_HEIGHT = (collisionCanvas.height = innerHeight);
 const position = canvas.getBoundingClientRect();
+const image = new Image();
+image.src = './resources/boom.png';
 
 let score = 0;
-
-const mousePosition = {
-  x: undefined,
-  y: undefined,
-};
-
 let ravens = [];
-window.addEventListener("click", (e) => {
-  const imageData = collisionCtx.getImageData(e.clientX, e.clientY, 1, 1);
-  console.log(imageData.data[0].toString(16));
-  ravens.forEach((raven) => {
-    if (
-      imageData.data[0] === raven.red &&
-      imageData.data[1] === raven.green &&
-      imageData.data[2] === raven.blue
-    ) {
-      raven.markedForDeletion = true;
-    }
-  });
-});
-
+let explosions = [];
 let previousTimestamp = 0;
 let timeToNextRaven = 0;
 
 class Raven {
-  constructor(red, green, blue) {
+  constructor() {
     this.raven = new Image();
     this.raven.src = "./resources/raven.png";
     this.rows = 6;
@@ -55,13 +38,15 @@ class Raven {
     this.timeSinceFlap = 0;
     this.flapInterval = Math.random() * 100 + 50;
     this.frame = 0;
-    this.red = red;
-    this.green = green;
-    this.blue = blue;
+    this.red = Math.floor(Math.random() * 255);
+    this.green = Math.floor(Math.random() * 255);
+    this.blue = Math.floor(Math.random() * 255);
+    this.color = 'rgb(' + this.red + ',' + this.green + ',' + this.blue+')';
   }
 
   draw() {
-    collisionCtx.fillStyle = `#${(this.red).toString(16)}${(this.green).toString(16)}${(this.blue).toString(16)}ff`;
+    collisionCtx.save();
+    collisionCtx.fillStyle = this.color;
     ctx.drawImage(
       this.raven,
       this.spriteWidth * this.frame,
@@ -75,6 +60,7 @@ class Raven {
     );
     collisionCtx.fillRect(this.x, this.y, this.width, this.height);
 
+    collisionCtx.restore();
   }
   update(deltaTime) {
     this.timeSinceFlap += deltaTime;
@@ -95,6 +81,60 @@ class Raven {
   }
 }
 
+
+class Explosion {
+  constructor(x, y) {
+    this.spriteSheet = image;
+    // this.spriteSheet = new Image();
+    // this.spriteSheet.src = "./resources/boom.png";
+    this.explosion = new Audio();
+    this.explosion.src = "./resources/explosion.wav";
+    this.rows = 5;
+    this.cols = 1;
+    this.spriteWidth = this.spriteSheet.width / this.rows;
+    this.spriteHeight = this.spriteSheet.height / this.cols;
+    this.width = this.spriteWidth * 0.5;
+    this.height = this.spriteHeight * 0.5;
+    this.frame = 0;
+    this.speed = 13;
+    this.turn = 0;
+    this.x = x;
+    this.y = y;
+    this.angle = Math.random() * 6.24;
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.drawImage(
+      this.spriteSheet,
+      this.spriteWidth * this.frame,
+      0,
+      this.spriteWidth,
+      this.spriteHeight,
+      0 - this.width / 2,
+      0 - this.height / 2,
+      this.width,
+      this.height
+    );
+    ctx.restore();
+  }
+
+  update(deltaTime) {
+    this.turn++;
+    if (this.frame === 0) this.explosion.play();
+    if(this.e)
+    if (this.turn % this.speed === 0) {
+      this.frame++;
+    }
+    if (this.frame > this.cols) {
+      explosions.splice(this, 1);
+    }
+    this.draw();
+  }
+}
+
 // for (let i = 0; i < totalRavens; i++) {
 //   ravens.push(new Raven());
 // }
@@ -109,6 +149,24 @@ const drawScore = () => {
   ctx.fillText(`Score: ${score}`, scoreX + 5, scoreY + 5);
 };
 
+
+window.addEventListener("click", (e) => {
+  const imageData = collisionCtx.getImageData(e.clientX, e.clientY, 1, 1);
+  ravens.forEach((raven) => {
+    if (
+      imageData.data[0] === raven.red &&
+      imageData.data[1] === raven.green &&
+      imageData.data[2] === raven.blue
+    ) {
+      // let before = ravens.length;
+      score++;
+      raven.markedForDeletion = true;
+      explosions.push(new Explosion(raven.x, raven.y))
+    }
+  });
+});
+
+
 const animate = (timestamp) => {
   requestAnimationFrame(animate);
 
@@ -118,19 +176,12 @@ const animate = (timestamp) => {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   collisionCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawScore();
-  ravens.forEach((raven) => {
-    raven.draw();
-    raven.update(deltaTime);
-    // if (raven.x < 0 - raven.width) {
-      ravens = ravens.filter((raven) => !raven.markedForDeletion);
-    // }
-    // ravens.sort((a, b) => b.height - a.height);
-  });
+  ravens = ravens.filter(object => !object.markedForDeletion);
+  [...ravens, ...explosions].forEach(object => object.update(deltaTime));
+  [...ravens, ...explosions].forEach(object => object.draw());
+  ravens.sort((r1, r2) => r2 - r1);
   if (timeToNextRaven > 1000) {
-    let red = Math.floor(Math.random() * 255);
-    let green = Math.floor(Math.random() * 255);
-    let blue = Math.floor(Math.random() * 255);
-    ravens.push(new Raven(red, green, blue));
+    ravens.push(new Raven());
     timeToNextRaven = 0;
   }
 };
