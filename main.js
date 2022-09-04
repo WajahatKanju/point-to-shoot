@@ -10,14 +10,45 @@ const CANVAS_HEIGHT = (canvas.height = innerHeight);
 const COLLISION_CANVAS_WIDTH = (collisionCanvas.width = innerWidth);
 const COLLISION_CANVAS_HEIGHT = (collisionCanvas.height = innerHeight);
 const position = canvas.getBoundingClientRect();
-const image = new Image();
-image.src = './resources/boom.png';
+const explosion = new Image();
+explosion.src = "./resources/boom.png";
 
 let score = 0;
 let ravens = [];
 let explosions = [];
 let previousTimestamp = 0;
 let timeToNextRaven = 0;
+let trails = [];
+
+class Trail {
+  constructor(x, y, size, color) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.radius = Math.random() + this.size / 10;
+    this.maxRadius = Math.random() * 20 + 30;
+    this.trailInterval = 200;
+    this.markedForDeletion = false;
+    this.color = color;
+    this.opacity = 1;
+    this.dx = Math.random() * 1 + 0.5;
+    // this.color = 'rgba(' + this.red + ',' + this.green + ',' + this.blue + ',' + this.opacity + ')';
+  }
+  draw() {
+    ctx.save();
+    ctx.beginPath();
+    ctx.globalAlpha = 1 - this.radius / this.maxRadius;
+    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  update() {
+    this.x += this.dx;
+    this.radius += 0.5;
+    if (this.radius > this.maxRadius) this.markedForDeletion = true;
+  }
+}
 
 class Raven {
   constructor() {
@@ -41,7 +72,7 @@ class Raven {
     this.red = Math.floor(Math.random() * 255);
     this.green = Math.floor(Math.random() * 255);
     this.blue = Math.floor(Math.random() * 255);
-    this.color = 'rgb(' + this.red + ',' + this.green + ',' + this.blue+')';
+    this.color = "rgb(" + this.red + "," + this.green + "," + this.blue + ")";
   }
 
   draw() {
@@ -65,6 +96,14 @@ class Raven {
   update(deltaTime) {
     this.timeSinceFlap += deltaTime;
     if (this.timeSinceFlap > this.flapInterval) {
+      trails.push(
+        new Trail(
+          this.x + this.width / 2,
+          this.y + this.height / 2,
+          this.width,
+          this.color
+        )
+      );
       this.timeSinceFlap = 0;
       if (this.frame + 1 > this.rows - 1) {
         this.frame = 0;
@@ -81,10 +120,9 @@ class Raven {
   }
 }
 
-
 class Explosion {
   constructor(x, y, sizeModifier) {
-    this.spriteSheet = image;
+    this.spriteSheet = explosion;
     // this.spriteSheet = new Image();
     // this.spriteSheet.src = "./resources/boom.png";
     this.explosion = new Audio();
@@ -148,7 +186,6 @@ const drawScore = () => {
   ctx.fillText(`Score: ${score}`, scoreX + 5, scoreY + 5);
 };
 
-
 window.addEventListener("click", (e) => {
   const imageData = collisionCtx.getImageData(e.clientX, e.clientY, 1, 1);
   ravens.forEach((raven) => {
@@ -160,11 +197,20 @@ window.addEventListener("click", (e) => {
       // let before = ravens.length;
       score++;
       raven.markedForDeletion = true;
-      explosions.push(new Explosion(raven.x + raven.width/2, raven.y + raven.height/2, raven.sizeModifier))
+      explosions.push(
+        new Explosion(
+          raven.x + raven.width / 2,
+          raven.y + raven.height / 2,
+          raven.sizeModifier
+        )
+      );
     }
   });
 });
 
+for (let i = 0; i < 2; i++) {
+  ravens.push(new Raven());
+}
 
 const animate = (timestamp) => {
   requestAnimationFrame(animate);
@@ -175,14 +221,18 @@ const animate = (timestamp) => {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   collisionCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawScore();
-  ravens = ravens.filter(object => !object.markedForDeletion);
-  [...ravens, ...explosions].forEach(object => object.update(deltaTime));
-  [...ravens, ...explosions].forEach(object => object.draw());
+  ravens = ravens.filter((object) => !object.markedForDeletion);
+  trails = trails.filter((object) => !object.markedForDeletion);
+  [...trails, ...ravens, ...explosions].forEach((object) =>
+    object.update(deltaTime)
+  );
+  [...trails, ...ravens, ...explosions].forEach((object) => object.draw());
   ravens.sort((r1, r2) => r2 - r1);
-  if (timeToNextRaven > 1000) {
-    ravens.push(new Raven());
-    timeToNextRaven = 0;
-  }
-  console.log(explosions)
+  // if (timeToNextRaven > 10000000) {
+  //   ravens.push(new Raven());
+  //   timeToNextRaven = 0;
+  // }
+
+  // console.log(trails);
 };
 animate(0);
