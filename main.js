@@ -285,7 +285,7 @@ const animate = (timestamp) => {
   // console.log(trails);
   if(!gameLost)   requestAnimationFrame(animate);
   else {
-    ctx.font = "40px Impact";
+    ctx.font = "40px Helvetica ";
     ctx.fillStyle = "black";
     ctx.fillText(`Game Over! Your Score was ${score}, Reload Window to Restart The Game `, ctx.canvas.width/2 - 550 -5 , ctx.canvas.height/2 -5);
     ctx.fillStyle = "black";
